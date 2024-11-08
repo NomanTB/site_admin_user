@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Публикации</title>
+    <style>
+        :root {
+            --background-color: #e8f5e9;
+            --header-background: #2e7d32;
+            --subheader-background: #388e3c;
+            --box-background: #4caf50;
+            --text-color: #000000;
+            --box-text-color: #ffffff;
+        }
+
+        .dark-theme {
+            --background-color: #1a1a1a;
+            --header-background: #1e3e1f;
+            --subheader-background: #2a4f2c;
+            --box-background: #3a6b3d;
+            --text-color: #ffffff;
+            --box-text-color: #ffffff;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .header {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            background-color: var(--header-background);
+            color: var(--box-text-color);
+            padding: 20px;
+            position: relative;
+        }
+        .subheader {
+            background-color: var(--subheader-background);
+            color: var(--box-text-color);
+            padding: 10px;
+            text-align: center;
+        }
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            padding: 10px;
+        }
+        .box {
+            flex-basis: calc(20% - 20px);
+            margin: 10px;
+            background-color: var(--box-background);
+            color: var(--box-text-color);
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            overflow: hidden;
+            min-height: 250px;
+            transform-origin: center;
+            transition: transform 0.3s ease;
+        }
+        .hover-enabled .box:hover {
+            transform: scale(1.05);
+            z-index: 1;
+        }
+        .box-header {
+            font-size: 18px;
+            font-weight: bold;
+            padding: 15px;
+            background-color: rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .box-content {
+            flex-grow: 1;
+            padding: 20px;
+            font-size: 14px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: normal;
+            word-wrap: break-word;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+        }
+        .modal-content {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close:hover {
+            color: #000;
+        }
+        .modal-header {
+            font-size: 54px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--box-background);
+            word-wrap: break-word;
+        }
+        .modal-body {
+            font-size: 42px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .toggle-switch {
+            display: flex;
+            align-items: center;
+        }
+        .toggle-switch input[type="checkbox"] {
+            display: none;
+        }
+        .toggle-switch label {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+            background-color: #ccc;
+            border-radius: 34px;
+            transition: background-color 0.3s;
+            cursor: pointer;
+        }
+        .toggle-slider {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 30px;
+            height: 30px;
+            background-color: white;
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+        .toggle-switch input[type="checkbox"]:checked + label {
+            background-color: #81c784;
+        }
+        .toggle-switch input[type="checkbox"]:checked + label .toggle-slider {
+            transform: translateX(26px);
+        }
+        .toggle-label {
+            margin-right: 10px;
+            color: var(--box-text-color);
+        }
+        .centered-heading {
+            text-align: center;
+            flex-grow: 1;
+            width: 100%;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .tooltip {
+          position: relative;
+          display: inline-block;
+        }
+        .tooltip .tooltiptext {
+          visibility: hidden;
+          width: 200px;
+          background-color: #555;
+          color: #fff;
+          text-align: center;
+          border-radius: 6px;
+          padding: 10px;
+          position: absolute;
+          z-index: 1;
+          top: 50%;
+          left: 100%;
+          margin-left: 10px;
+          transform: translateY(-50%);
+          opacity: 0;
+          transition: opacity 0.3s;
+          box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .tooltip .tooltiptext::after {
+          content: "";
+          position: absolute;
+          top: 50%;
+          right: 100%;
+          margin-top: -5px;
+          border-width: 5px;
+          border-style: solid;
+          border-color: transparent #555 transparent transparent;
+        }
+        .tooltip:hover .tooltiptext {
+          visibility: visible;
+          opacity: 1;
+        }
+        .toggle-container {
+          position: relative;
+        }
+        .settings-button {
+            position: absolute;
+            left: 0px;
+            top: 10%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--box-text-color);
+            font-size: 24px;
+            cursor: pointer;
+        }
+        .settings-modal {
+            display: none;
+            position: fixed;
+            z-index: 2;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+        }
+        .settings-modal-content {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 90%;
+            max-width: 600px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .settings-modal-header {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--box-background);
+        }
+        .theme-toggle {
+            margin-left: 20px;
+        }
+        .hover-toggle {
+            margin-left: 20px;
+        }
+        .settings-group {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .settings-item {
+            padding: 15px;
+            border-bottom: 1px solid var(--box-background);
+        }
+        .settings-description {
+            margin-top: 8px;
+            color: var(--text-color);
+            opacity: 0.8;
+            font-size: 14px;
+        }
+        @media (max-width: 1200px) {
+            .box {
+                flex-basis: calc(25% - 20px);
+            }
+        }
+        @media (max-width: 900px) {
+            .box {
+                flex-basis: calc(33.33% - 20px);
+            }
+        }
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                align-items: center;
+            }
+            .toggle-container {
+                margin-top: 10px;
+            }
+            .settings-button {
+                position: static;
+                margin-bottom: 10px;
+                transform: none;
+            }
+            .centered-heading {
+                flex-direction: column;
+            }
+            .theme-toggle {
+                margin-left: 0;
+                margin-top: 10px;
+            }
+            .hover-toggle {
+                margin-left: 0;
+                margin-top: 10px;
+            }
+        }
+        @media (max-width: 600px) {
+            .box {
+                flex-basis: calc(50% - 20px);
+            }
+        }
+        @media (max-width: 400px) {
+            .box {
+                flex-basis: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="centered-heading">
+            <button class="settings-button" id="settingsButton">⚙️</button>
+            <h1>Публикации</h1>
+        </div>
+        <div class="toggle-container tooltip">
+            <!--<div class="toggle-switch">
+                <span class="toggle-label">Открыть в большом окне</span>
+                <input type="checkbox" id="toggleZoom" checked>
+                <label for="toggleZoom">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>-->
+            <span class="tooltiptext">Переключатель для открытия контента в большом или текущем окне</span>
+        </div>
+    </div>
+    <div class="subheader">
+        <h2>Последние публикации</h2>
+    </div>
+    <div class="container" id="boxContainer">
+        <!-- Публикации будут добавлены здесь динамически -->
+    </div>
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <p id="modalText"></p>
+        </div>
+    </div>
+    <div id="settingsModal" class="settings-modal">
+        <div class="settings-modal-content">
+            <span class="close" id="closeSettings">&times;</span>
+            <div class="settings-modal-header">Настройки</div>
+            <div class="settings-group">
+                <div class="settings-item">
+                    <div class="toggle-switch">
+                        <span class="toggle-label">Темная тема</span>
+                        <input type="checkbox" id="themeToggle">
+                        <label for="themeToggle">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <p class="settings-description">Переключение между светлой и темной темой оформления</p>
+                </div>
+                <div class="settings-item">
+                    <div class="toggle-switch">
+                        <span class="toggle-label">Открыть в большом окне</span>
+                        <input type="checkbox" id="toggleZoom">
+                        <label for="toggleZoom">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <p class="settings-description">При включении публикации будут открываться в модальном окне</p>
+                </div>
+                <div class="settings-item">
+                    <div class="toggle-switch">
+                        <span class="toggle-label">Эффект наведения</span>
+                        <input type="checkbox" id="hoverToggle">
+                        <label for="hoverToggle">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <p class="settings-description">Увеличение публикации при наведении курсора</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const container = document.getElementById('boxContainer');
+        const modal = document.getElementById('modal');
+        const modalText = document.getElementById('modalText');
+        const closeBtn = document.getElementsByClassName('close')[0];
+        const toggleZoom = document.getElementById('toggleZoom');
+        const settingsButton = document.getElementById('settingsButton');
+        const settingsModal = document.getElementById('settingsModal');
+        const closeSettings = document.getElementById('closeSettings');
+        const themeToggle = document.getElementById('themeToggle');
+        const hoverToggle = document.getElementById('hoverToggle');
+
+        function createBox(post) {
+            const box = document.createElement('div');
+            box.className = 'box';
+            box.innerHTML = `
+                <div class="box-header">${post.title}</div>
+                <div class="box-content">${post.content}</div>
+            `;
+            box.addEventListener('click', () => openModal(post.title, post.content));
+            return box;
+        }
+
+        function displayPublications() {
+            fetch('/api/posts')
+                .then(response => response.json())
+                .then(publications => {
+                    container.innerHTML = '';
+                    publications.forEach(post => {
+                        container.appendChild(createBox(post));
+                    });
+                })
+                .catch(error => {
+                    container.innerHTML = '<p>Ошибка при загрузке публикаций</p>';
+                });
+        }
+
+        function openModal(title, content) {
+            if (toggleZoom.checked) {
+                modalText.innerHTML = `
+                    <div class="modal-header">${title}</div>
+                    <div class="modal-body">${content}</div>
+                `;
+                modal.style.display = 'block';
+            }
+        }
+
+        toggleZoom.addEventListener('change', function() {
+            const toggleLabel = this.parentNode.querySelector('.toggle-label');
+            const tooltipText = this.closest('.tooltip').querySelector('.tooltiptext');
+            if (this.checked) {
+                this.parentNode.classList.add('active');
+                toggleLabel.textContent = 'Открыть в большом окне';
+                tooltipText.textContent = 'Переключатель для открытия контента в большом окне';
+            } else {
+                this.parentNode.classList.remove('active');
+                toggleLabel.textContent = 'Открыть в текущем окне';
+                tooltipText.textContent = 'Переключатель для открытия контента в текущем окне';
+            }
+        });
+
+        closeBtn.onclick = () => modal.style.display = 'none';
+        window.onclick = (event) => {
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+            if (event.target == settingsModal) {
+                settingsModal.style.display = 'none';
+            }
+        }
+
+        settingsButton.onclick = () => {
+            settingsModal.style.display = 'block';
+        }
+
+        closeSettings.onclick = () => {
+            settingsModal.style.display = 'none';
+        }
+
+        // Theme toggle functionality
+        function setTheme(isDark, isManualChange = false) {
+            if (isDark) {
+                document.body.classList.add('dark-theme');
+                themeToggle.checked = true;
+            } else {
+                document.body.classList.remove('dark-theme');
+                themeToggle.checked = false;
+            }
+            if (isManualChange) {
+                localStorage.setItem('darkTheme', isDark);
+            }
+        }
+
+        // Check for saved theme preference or use device preference
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const savedTheme = localStorage.getItem('darkTheme');
+
+        if (savedTheme !== null) {
+            setTheme(savedTheme === 'true');
+        } else {
+            setTheme(prefersDark);
+        }
+
+        // Listen for theme toggle changes
+        themeToggle.addEventListener('change', (e) => {
+            setTheme(e.target.checked, true);
+        });
+
+        // Listen for system theme changes
+        window.matchMedia('(prefers-color-scheme: dark)').addListener(e => {
+            if (localStorage.getItem('darkTheme') === null) {
+                setTheme(e.matches);
+            }
+        });
+
+        // Initialize other toggles with default states
+        toggleZoom.checked = false;
+        hoverToggle.checked = false;
+        document.body.classList.remove('hover-enabled');
+
+        // Save zoom preference
+        toggleZoom.addEventListener('change', (e) => {
+            localStorage.setItem('zoomEnabled', e.target.checked);
+        });
+
+        // Save hover preference
+        hoverToggle.addEventListener('change', (e) => {
+            localStorage.setItem('hoverEffect', e.target.checked);
+            if (e.target.checked) {
+                document.body.classList.add('hover-enabled');
+            } else {
+                document.body.classList.remove('hover-enabled');
+            }
+        });
+
+        // Load saved preferences
+        const savedZoom = localStorage.getItem('zoomEnabled');
+        const savedHover = localStorage.getItem('hoverEffect');
+
+        if (savedZoom !== null) {
+            toggleZoom.checked = savedZoom === 'true';
+        }
+        if (savedHover !== null) {
+            hoverToggle.checked = savedHover === 'true';
+            if (savedHover === 'true') {
+                document.body.classList.add('hover-enabled');
+            }
+        }
+
+
+        // Отображаем публикации при загрузке страницы
+        displayPublications();
+
+        // Обновляем публикации каждые 30 секунд
+        setInterval(displayPublications, 30000);
+        
+        // Функция для отправки информации о посещении
+        function sendVisitInfo() {
+            const visitInfo = {
+                userAgent: navigator.userAgent,
+                language: navigator.language,
+                screenWidth: screen.width,
+                screenHeight: screen.height,
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                referrer: document.referrer,
+                timestamp: new Date().toISOString()
+            };
+
+            fetch('/api/visit', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(visitInfo)
+            }).catch(error => console.error('Ошибка при отправке информации о посещении:', error));
+        }
+
+        // Отправляем информацию о посещении при загрузке страницы
+        sendVisitInfo();
+
+        // Отображаем публикации при загрузке страницы
+        displayPublications();
+
+        // Обновляем публикации каждые 30 секунд
+        setInterval(displayPublications, 30000);
+    </script>
+</body>
+

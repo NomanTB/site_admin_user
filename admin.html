@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админ-панель</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 20px;
+        }
+        input, textarea {
+            margin-bottom: 10px;
+            padding: 5px;
+        }
+        button {
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .publication {
+            background-color: #f0f0f0;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 10px;
+            position: relative;
+        }
+        .publication h3 {
+            margin-top: 0;
+        }
+        .publication p {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        #loginForm, #adminContent {
+            display: none;
+        }
+        #editForm label {
+            display: block;
+            margin-top: 10px;
+            margin-bottom: 5px;
+        }
+        #editContent {
+            height: 300px;
+        }
+        .publication-actions {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #ddd;
+        }
+        .delete-btn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            cursor: pointer;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+        .delete-btn:hover {
+            background-color: #c82333;
+        }
+        .trash-icon {
+            width: 16px;
+            height: 16px;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .confirm-modal {
+            display: none;
+            position: fixed;
+            z-index: 2;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.4);
+        }
+        .confirm-modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 300px;
+            text-align: center;
+            border-radius: 5px;
+        }
+        .confirm-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .confirm-delete {
+            background-color: #dc3545;
+        }
+        .cancel-delete {
+            background-color: #6c757d;
+        }
+        .search-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        #searchInput {
+            flex-grow: 1;
+            padding: 5px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        #backupButton {
+            background-color: #28a745;
+        }
+        #backupModal .modal-content {
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .backup-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+        .backup-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 10px;
+        }
+        .backup-icon {
+            width: 64px;
+            height: 64px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .backup-name {
+            font-size: 12px;
+            word-break: break-all;
+            margin-bottom: 8px;
+        }
+        .no-backups {
+            text-align: center;
+            color: #6c757d;
+            grid-column: 1 / -1;
+        }
+        .backup-actions {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .backup-delete {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            font-size: 12px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .backup-delete:hover {
+            background-color: #c82333;
+        }
+        #visitStats {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 20px;
+            cursor: pointer;
+        }
+        #visitStatsModal .modal-content {
+            width: 90%;
+            max-width: 1200px;
+            margin: 5% auto;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        #visitStatsModal table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        #visitStatsModal th, #visitStatsModal td {
+            border: 1px solid #dee2e6;
+            padding: 12px;
+            text-align: left;
+            font-size: 14px;
+        }
+        #visitStatsModal th {
+            background-color: #f8f9fa;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+        #visitStatsModal tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        #visitStatsModal .row-number {
+            width: 50px;
+            text-align: center;
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div id="loginForm">
+        <h2>Авторизация</h2>
+        <form id="authForm">
+            <input type="text" id="username" placeholder="Имя пользователя" required>
+            <input type="password" id="password" placeholder="Пароль" required>
+            <button type="submit">Войти</button>
+        </form>
+    </div>
+
+    <div id="adminContent">
+        <div class="header">
+            <h1>Админ-панель</h1>
+            <button id="backupButton">Резервные копии постов</button>
+        </div>
+        <div id="visitStats">
+            Загрузка статистики посещений...
+        </div>
+        <form id="publicationForm">
+            <input type="text" id="title" placeholder="Заголовок" required>
+            <textarea id="content" placeholder="Текст публикации" required></textarea>
+            <button type="submit">Добавить публикацию</button>
+        </form>
+        <div id="message"></div>
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="Поиск публикаций...">
+            <button onclick="clearSearch()">Очистить</button>
+        </div>
+        <h2>Существующие публикации</h2>
+        <div id="publications"></div>
+    </div>
+
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Редактировать публикацию</h2>
+            <form id="editForm">
+                <input type="hidden" id="editId">
+                <label for="editTitle">Заголовок</label>
+                <input type="text" id="editTitle" placeholder="Заголовок" required>
+                <label for="editContent">Содержание</label>
+                <textarea id="editContent" placeholder="Текст публикации" required></textarea>
+                <button type="submit">Сохранить изменения</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="confirmModal" class="confirm-modal">
+        <div class="confirm-modal-content">
+            <h3>Подтверждение удаления</h3>
+            <p>Вы уверены, что хотите удалить эту публикацию?</p>
+            <div class="confirm-buttons">
+                <button class="confirm-delete" id="confirmDelete">Удалить</button>
+                <button class="cancel-delete" id="cancelDelete">Отмена</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="backupModal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="closeBackupModal">&times;</span>
+            <h2>Резервные копии постов</h2>
+            <div id="backupList" class="backup-grid"></div>
+            <div class="backup-actions">
+                <button id="createBackupBtn">Создать новую резервную копию</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="visitStatsModal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="closeVisitStatsModal">&times;</span>
+            <h2>Подробная статистика посещений</h2>
+            <div id="detailedVisitStats"></div>
+        </div>
+    </div>
+
+    <script>
+        // ВАЖНО: Замените эти учетные данные на более безопасные в продакшене
+        const ADMIN_USERNAME = 'admin';
+        const ADMIN_PASSWORD = 'admin';
+
+        const loginForm = document.getElementById('loginForm');
+        const adminContent = document.getElementById('adminContent');
+        const authForm = document.getElementById('authForm');
+        const publicationForm = document.getElementById('publicationForm');
+        const publicationsContainer = document.getElementById('publications');
+        const editModal = document.getElementById('editModal');
+        const editForm = document.getElementById('editForm');
+        const closeBtn = document.getElementsByClassName('close')[0];
+        const confirmModal = document.getElementById('confirmModal');
+        const confirmDeleteBtn = document.getElementById('confirmDelete');
+        const cancelDeleteBtn = document.getElementById('cancelDelete');
+        const searchInput = document.getElementById('searchInput');
+        const backupButton = document.getElementById('backupButton');
+        const backupModal = document.getElementById('backupModal');
+        const backupList = document.getElementById('backupList');
+        const closeBackupModal = document.getElementById('closeBackupModal');
+        const createBackupBtn = document.getElementById('createBackupBtn');
+        const visitStats = document.getElementById('visitStats');
+        const visitStatsModal = document.getElementById('visitStatsModal');
+        const closeVisitStatsModal = document.getElementById('closeVisitStatsModal');
+        const detailedVisitStats = document.getElementById('detailedVisitStats');
+        let currentDeleteId = null;
+        let allPublications = [];
+        let backups = [];
+
+        // Показываем форму входа при загрузке страницы
+        loginForm.style.display = 'block';
+
+        authForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+                loginForm.style.display = 'none';
+                adminContent.style.display = 'block';
+                displayPublications();
+                loadVisitStats();
+            } else {
+                alert('Неверное имя пользователя или пароль');
+            }
+        });
+
+        function displayPublications(publications = null) {
+            if (!publications) {
+                fetch('/api/posts')
+                    .then(response => response.json())
+                    .then(data => {
+                        allPublications = data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                        renderPublications(allPublications);
+                    })
+                    .catch(error => {
+                        console.error('Ошибка при загрузке публикаций:', error);
+                        publicationsContainer.innerHTML = '<p>Ошибка при загрузке публикаций</p>';
+                    });
+            } else {
+                renderPublications(publications);
+            }
+        }
+
+        function renderPublications(publications) {
+            publicationsContainer.innerHTML = '';
+            publications.forEach(post => {
+                const postElement = document.createElement('div');
+                postElement.className = 'publication';
+                postElement.innerHTML = `
+                    <h3>${post.title}</h3>
+                    <p>${post.content}</p>
+                    <p>Создано: ${new Date(post.createdAt).toLocaleString()}</p>
+                    <div class="publication-actions">
+                        <button onclick="showEditModal(${post.id}, '${post.title}', '${post.content.replace(/'/g, "\\'")}')">Редактировать</button>
+                        <button class="delete-btn" onclick="showDeleteConfirmation(${post.id})">
+                            <svg class="trash-icon" viewBox="0 0 24 24" fill="none" 
+                            stroke="currentColor" stroke-width="2">
+                                <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6"/>
+                            </svg>
+                            Удалить
+                        </button>
+                    </div>
+                `;
+                publicationsContainer.appendChild(postElement);
+            });
+        }
+
+        function showEditModal(id, title, content) {
+            document.getElementById('editId').value = id;
+            document.getElementById('editTitle').value = title;
+            document.getElementById('editContent').value = content;
+            editModal.style.display = 'block';
+        }
+
+        function showDeleteConfirmation(id) {
+            currentDeleteId = id;
+            confirmModal.style.display = 'block';
+        }
+
+        function deletePublication(id) {
+            fetch(`/api/posts/${id}`, {
+                method: 'DELETE',
+            })
+            .then(response => response.json())
+            .then(() => {
+                displayPublications();
+                document.getElementById('message').textContent = 'Публикация удалена!';
+            })
+            .catch((error) => {
+                console.error('Ошибка при удалении публикации:', error);
+                document.getElementById('message').textContent = 'Ошибка при удалении публикации';
+            });
+        }
+
+        confirmDeleteBtn.onclick = function() {
+            if (currentDeleteId !== null) {
+                deletePublication(currentDeleteId);
+                confirmModal.style.display = 'none';
+                currentDeleteId = null;
+            }
+        }
+
+        cancelDeleteBtn.onclick = function() {
+            confirmModal.style.display = 'none';
+            currentDeleteId = null;
+        }
+
+        closeBtn.onclick = function() {
+            editModal.style.display = 'none';
+        }
+
+        window.onclick = function(event) {
+            if (event.target == editModal) {
+                editModal.style.display = 'none';
+            }
+            if (event.target == confirmModal) {
+                confirmModal.style.display = 'none';
+                currentDeleteId = null;
+            }
+            if (event.target == backupModal) {
+                backupModal.style.display = 'none';
+            }
+            if (event.target == visitStatsModal) {
+                visitStatsModal.style.display = 'none';
+            }
+        }
+
+        editForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const id = document.getElementById('editId').value;
+            const title = document.getElementById('editTitle').value;
+            const content = document.getElementById('editContent').value;
+            updatePublication(id, title, content);
+        });
+
+        function updatePublication(id, title, content) {
+            fetch(`/api/posts/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ title, content }),
+            })
+            .then(response => response.json())
+            .then(() => {
+                editModal.style.display = 'none';
+                displayPublications();
+                document.getElementById('message').textContent = 'Публикация обновлена!';
+            })
+            .catch((error) => {
+                console.error('Ошибка при обновлении публикации:', error);
+                document.getElementById('message').textContent = 'Ошибка при обновлении публикации';
+            });
+        }
+
+        publicationForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const title = document.getElementById('title').value;
+            const content = document.getElementById('content').value;
+            
+            fetch('/api/posts', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ title, content }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('message').textContent = 'Публикация добавлена!';
+                document.getElementById('title').value = '';
+                document.getElementById('content').value = '';
+                displayPublications();
+                createBackup();
+            })
+            .catch((error) => {
+                console.error('Ошибка при добавлении публикации:', error);
+                document.getElementById('message').textContent = 'Ошибка при добавлении публикации';
+            });
+        });
+
+        function searchPublications() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const filteredPublications = allPublications.filter(post => 
+                post.title.toLowerCase().includes(searchTerm) || 
+                post.content.toLowerCase().includes(searchTerm)
+            );
+            renderPublications(filteredPublications);
+        }
+
+        function clearSearch() {
+            searchInput.value = '';
+            renderPublications(allPublications);
+        }
+
+        searchInput.addEventListener('input', searchPublications);
+
+        backupButton.addEventListener('click', function() {
+            fetchBackups();
+            backupModal.style.display = 'block';
+        });
+
+        closeBackupModal.onclick = function() {
+            backupModal.style.display = 'none';
+        }
+
+        function fetchBackups() {
+            fetch('/api/backups')
+                .then(response => response.json())
+                .then(data => {
+                    backups = data.backups.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                    renderBackups();
+                })
+                .catch(error => {
+                    console.error('Ошибка при загрузке резервных копий:', error);
+                    backupList.innerHTML = '<p class="no-backups">Ошибка при загрузке резервных копий</p>';
+                });
+        }
+
+        function renderBackups() {
+            if (backups.length > 0) {
+                backupList.innerHTML = backups.map(backup => `
+                    <div class="backup-item">
+                        <div class="backup-icon" onclick="restoreBackup('${backup.filename}')">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"></path>
+                                <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                                <polyline points="7 3 7 8 15 8"></polyline>
+                            </svg>
+                        </div>
+                        <span class="backup-name">${backup.filename}</span>
+                        <button class="backup-delete" onclick="deleteBackup('${backup.filename}')">Удалить</button>
+                    </div>
+                `).join('');
+            } else {
+                backupList.innerHTML = '<p class="no-backups">Резервные копии отсутствуют</p>';
+            }
+        }
+
+        function restoreBackup(filename) {
+            if (confirm('Вы уверены, что хотите восстановить эту резервную копию? Все текущие данные будут заменены.')) {
+                fetch(`/api/backups/restore/${filename}`, { method: 'POST' })
+                    .then(response => response.json())
+                    .then(data => {
+                        alert('Резервная копия успешно восстановлена');
+                        backupModal.style.display = 'none';
+                        displayPublications();
+                    })
+                    .catch(error => {
+                        console.error('Ошибка при восстановлении резервной копии:', error);
+                        alert('Ошибка при восстановлении резервной копии');
+                    });
+            }
+        }
+
+        function createBackup() {
+            fetch('/api/backups', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Резервная копия создана:', data);
+                    fetchBackups();
+                })
+                .catch(error => {
+                    console.error('Ошибка при создании резервной копии:', error);
+                });
+        }
+
+        createBackupBtn.addEventListener('click', function() {
+            createBackup();
+        });
+
+        function deleteBackup(filename) {
+            if (confirm('Вы уверены, что хотите удалить эту резервную копию?')) {
+                fetch(`/api/backups/${filename}`, { method: 'DELETE' })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('Резервная копия удалена:', data);
+                        fetchBackups();
+                    })
+                    .catch(error => {
+                        console.error('Ошибка при удалении резервной копии:', error);
+                        alert('Ошибка при удалении резервной копии');
+                    });
+            }
+        }
+
+        function loadVisitStats() {
+            fetch('/api/visits')
+                .then(response => response.json())
+                .then(data => {
+                    visitStats.textContent = `Сайт посещало: ${data.totalVisits} раз`;
+                })
+                .catch(error => {
+                    console.error('Ошибка при загрузке статистики посещений:', error);
+                    visitStats.textContent = 'Ошибка при загрузке статистики посещений';
+                });
+        }
+
+        function getBrowserInfo(userAgent) {
+            const ua = userAgent.toLowerCase();
+            if (ua.includes('firefox')) return 'Firefox';
+            if (ua.includes('chrome')) return 'Chrome';
+            if (ua.includes('safari') && !ua.includes('chrome')) return 'Safari';
+            if (ua.includes('edge')) return 'Edge';
+            if (ua.includes('opera')) return 'Opera';
+            return 'Unknown Browser';
+        }
+
+        function getOSInfo(userAgent) {
+            const ua = userAgent.toLowerCase();
+            if (ua.includes('windows')) return 'Windows';
+            if (ua.includes('mac os')) return 'MacOS';
+            if (ua.includes('linux')) return 'Linux';
+            if (ua.includes('android')) return 'Android';
+            if (ua.includes('ios')) return 'iOS';
+            return 'Unknown OS';
+        }
+
+        visitStats.addEventListener('click', function() {
+            fetch('/api/visits')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.visits && data.visits.length > 0) {
+                        let tableHTML = `
+                            <table>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Браузер</th>
+                                    <th>Операционная система</th>
+                                    <th>Язык браузера</th>
+                                    <th>Размер экрана</th>
+                                    <th>Регион</th>
+                                    <th>Время доступа</th>
+                                </tr>
+                        `;
+                        data.visits.forEach((visit, index) => {
+                            tableHTML += `
+                                <tr>
+                                    <td class="row-number">${index + 1}</td>
+                                    <td>${getBrowserInfo(visit.userAgent)}</td>
+                                    <td>${getOSInfo(visit.userAgent)}</td>
+                                    <td>${visit.language}</td>
+                                    <td>${visit.screenWidth}x${visit.screenHeight}</td>
+                                    <td>${visit.timezone.split('/')[1] || visit.timezone}</td>
+                                    <td>${new Date(visit.timestamp).toLocaleString('ru-RU', {
+                                        year: 'numeric',
+                                        month: '2-digit',
+                                        day: '2-digit',
+                                        hour: '2-digit',
+                                        minute: '2-digit',
+                                        second: '2-digit'
+                                    })}</td>
+                                </tr>
+                            `;
+                        });
+                        tableHTML += '</table>';
+                        detailedVisitStats.innerHTML = tableHTML;
+                    } else {
+                        detailedVisitStats.textContent = 'Нет данных о посещениях';
+                    }
+                    visitStatsModal.style.display = 'block';
+                })
+                .catch(error => {
+                    console.error('Ошибка при загрузке подробной статистики посещений:', error);
+                    detailedVisitStats.textContent = 'Ошибка при загрузке подробной статистики посещений';
+                    visitStatsModal.style.display = 'block';
+                });
+        });
+
+        closeVisitStatsModal.onclick = function() {
+            visitStatsModal.style.display = 'none';
+        }
+
+        // Инициализация
+        displayPublications();
+        loadVisitStats();
+    </script>
+</body>
+</html>
